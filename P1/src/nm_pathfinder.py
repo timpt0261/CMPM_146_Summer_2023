@@ -17,11 +17,22 @@ def find_path(source_point, destination_point, mesh):
         A list of boxes explored by the algorithm
     """
 
-    # p is the current from the src
-    # q will be the current from the dst
+    path = []
+    boxes = {} # mapping of boxes to (backpointer to previous box), used to find the path
 
-    p_box = find_box(source_point, mesh)
-    q_box = find_box(destination_point, mesh)
+    # p is the current from the src
+    # q will be the current from the
+
+
+
+    src_box = find_box(source_point, mesh)
+    dst_box = find_box(destination_point, mesh)
+
+    p_box = src_box
+    q_box = dst_box
+
+    if (p_box is None or q_box is None):
+        return path, boxes.keys()
 
     p_src = source_point
     p_dst = None
@@ -38,9 +49,6 @@ def find_path(source_point, destination_point, mesh):
 
 
     heappush(p_frontier, (0, (p_box, p_src)))
-
-    path = []
-    boxes = {} # mapping of boxes to (backpointer to previous box), used to find the path
     costsofar = { p_box : 0 }
 
 
@@ -70,10 +78,10 @@ def find_path(source_point, destination_point, mesh):
 
     if (pathfound):
         path.append(destination_point)
-        curr = q_box
-        while (curr != p_box):
+        curr = dst_box
+        while (curr != src_box):
             path.append(boxes[curr][1])
-            curr = boxes[curr]
+            curr = boxes[curr][0]
         path.append(source_point)
 
     return path, boxes.keys()
