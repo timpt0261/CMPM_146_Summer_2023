@@ -105,9 +105,30 @@ def euclidean(p1=(0, 0), p2=(0, 0)):
 
 # p is the current point
 def find_next_point(n, srcbox, dstbox):
-  return (dstbox[0], dstbox[2])
+    ret_x = n[0]
+    ret_y = n[1]
+
+    # check if left and right meet
+    if (srcbox[0] == dstbox[1] or srcbox[1] == dstbox[0]):
+        ret_x = srcbox[0] if (srcbox[0] == dstbox[1]) else srcbox[1]
+
+        # y range (max of the top, the min of the bottom)
+        top = max(srcbox[2], dstbox[2]) # b1y1 , b2y1
+        bottom = min(srcbox[3], dstbox[3]) # b1y2 , b2y2
+        ret_y = top if (n[1] <= top) else bottom if (bottom <= n[1]) else n[1]
+
+    # check if top and down meet
+    if (srcbox[2] == dstbox[3] or srcbox[3] == dstbox[2]):
+        ret_y = srcbox[2] if (srcbox[2] == dstbox[3]) else srcbox[3]
+
+        # x range (Max of the left, the min of the right)
+        left = max(srcbox[0], dstbox[0]) # b1x1 , b2x1
+        right = min(srcbox[1], dstbox[1]) # b1x2 , b2x2
+        ret_x = left if (n[0] <= left) else right if (right <= n[0]) else n[0]
+
+    return (ret_x, ret_y)
 
 def transtion_cost( p_point, q_point):
     distance = sqrt(pow((q_point[1] - p_point[1]), 2) + pow((q_point[0] - p_point[0]), 2))
-    #average_cost = (mesh["boxes"][])/2
+    average_cost = ()/2
     return distance
