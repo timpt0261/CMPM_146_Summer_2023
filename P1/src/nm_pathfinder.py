@@ -83,6 +83,7 @@ def find_path(source_point, destination_point, mesh):
             path.append(boxes[curr][1])
             curr = boxes[curr][0]
         path.append(source_point)
+        path.reverse()
 
     return path, boxes.keys()
 
