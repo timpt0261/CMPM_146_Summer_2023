@@ -20,13 +20,10 @@ def find_path(source_point, destination_point, mesh):
     path = []
     # mapping of boxes to (backpointer to previous box), used to find the path
     boxes = {}
-
     # p is the current from the src
     # q will be the current from the
-
     src_box = find_box(source_point, mesh)
     dst_box = find_box(destination_point, mesh)
-
     p_box = src_box
     q_box = dst_box
 
@@ -35,153 +32,105 @@ def find_path(source_point, destination_point, mesh):
 
     p_src = source_point
     p_dst = None
-
     q_src = destination_point
     q_dst = None
-
     p_frontier = []  # takes in a (priority, {stuff})
-
-    # stuff has:
-    # current box
-    # current local source point
-
-    heappush(p_frontier, (0, (p_box, p_src), "Destination"))
-    heappush(p_frontier, (0, (q_box, q_src), "Source"))
-    
-    foward_prev = {}
-    backward_prev = {}
-
-    foward_cost_so_far = {p_box: 0}
-    backward_cost_so_far = {p_box: 0}
-
-    # intialize current box as visited
-    boxes[p_box] = None  # I came from nowhere to the source!
-
-    pathfound = False
-    while (p_frontier):
-        priority, (p_box, p_src), goal = heappop(p_frontier)
-
-        if(foward_prev[p_box] == backward_prev[p_box]):
-            break
-
-        if (p_box == q_box ):
-            pathfound = True
-            break
-
-        if (goal == "Destination"):
-
-            for neighbor in mesh["adj"][p_box]:
-                p_dst = find_next_point(p_src, p_box, neighbor)
-                link_cost = euclidean(p_src, p_dst)
-                new_cost = foward_cost_so_far[p_box] + link_cost
-
-                if (neighbor not in boxes or new_cost < foward_cost_so_far[neighbor]):
-                    foward_cost_so_far[neighbor] = new_cost
-                    priority = new_cost + euclidean(p_dst, q_src)
-                    heappush(p_frontier, (priority, (neighbor, p_dst)))
-                    foward_prev[neighbor] = p_box 
-                    
-                    # boxes[neighbor] = (p_box, p_dst)
-        else:
-            for neighbor in mesh["adj"][p_box]:
-                q_dst = find_next_point(p_src, p_box, neighbor)
-                link_cost = euclidean(p_src, p_dst)
-                new_cost = backward_cost_so_far[p_box] + link_cost
-
-                if (neighbor not in boxes or new_cost < backward_cost_so_far[neighbor]):
-                    backward_cost_so_far[neighbor] = new_cost
-                    priority = new_cost + euclidean(p_dst, p_src)
-                    heappush(p_frontier, (priority, (neighbor, p_dst), "Source"))
-                    backward_prev[neighbor] = p_box
-                    # boxes[neighbor] = (p_box, p_dst)
-
-    if (pathfound):
-        path.append(destination_point)
-        curr = dst_box
-        while (curr != src_box):
-            path.append(boxes[curr][1])
-            curr = boxes[curr][0]
-        path.append(source_point)
-        path.reverse()
-
-    return path, boxes.keys()
-
-
-def a_star(source_point, destination_point, mesh):
-    path = []
-    # mapping of boxes to (backpointer to previous box), used to find the path
-    boxes = {}
-
-    # p is the current from the src
-    # q will be the current from the
-
-    src_box = find_box(source_point, mesh)
-    dst_box = find_box(destination_point, mesh)
-
-    p_box = src_box
-    q_box = dst_box
-
-    if (p_box is None or q_box is None):
-        return path, boxes.keys()
-
-    p_src = source_point
-    p_dst = None
-
-    q_src = destination_point
-    q_dst = None
-
-    p_frontier = []  # takes in a (priority, {stuff})
+    q_frontier = []
 
     # stuff has:
     # current box
     # current local source point
 
     heappush(p_frontier, (0, (p_box, p_src)))
-    foward_cost_so_far = {p_box: 0}
-    backward_cost_so_far = {q_box: 0}
+    heappush(q_frontier, (0, (q_box, q_src)))
 
-    # intialize current box as visited
-    boxes[p_box] = None  # I came from nowhere to the source!
+    foward_cost = {p_box: 0}
+    backward_cost = {q_box: 0}
 
-    pathfound = False
-    while (p_frontier):
-        priority, (p_box, p_src) = heappop(p_frontier)
+    foward_prev = {}
+    backward_prev = {}
 
-        if (p_box == q_box):
-            pathfound = True
+    foward_prev[p_box] = None
+    backward_prev[q_box] = None
+
+    p_path = []
+    q_path = []
+
+    pathFound = False
+    while (p_frontier and q_frontier):
+        p_priority, (p_box, p_src) = heappop(p_frontier)
+        q_priority, (q_box, q_src) = heappop(q_frontier)
+
+        if ((q_box, q_src) in foward_prev.values()):
+            boxes = foward_prev.copy()
+            boxes.update(backward_prev)
+
+            p_path = construct_path((p_box, p_src), dst_box, foward_prev)
+            print(p_path)
+            q_path = construct_path(foward_prev[p_box], src_box, backward_prev)
+            print(q_path)
+            # path = p_path + q_path.reverse()
+            pathFound = True
             break
 
-            for neighbor in mesh["adj"][p_box]:
-                p_dst = find_next_point(p_src, p_box, neighbor)
-                link_cost = euclidean(p_src, p_dst)
-                new_cost = foward_cost_so_far[p_box] + link_cost
+        if ((p_box, p_src) in backward_prev.values()):
+            boxes = foward_prev.copy()
+            boxes.update(backward_prev)
 
-                if (neighbor not in boxes or new_cost < foward_cost_so_far[neighbor]):
-                    foward_cost_so_far[neighbor] = new_cost
-                    priority = new_cost + euclidean(p_dst, q_src)
-                    heappush(p_frontier, (priority, (neighbor, p_dst)))
-                    # boxes[neighbor] = (p_box, p_dst)
+            q_path = construct_path((q_box, q_src), dst_box, backward_prev)
+            p_path = construct_path(backward_prev[q_box], src_box, foward_prev)
 
-                # path.append((boxes[0], boxes[1]))
+            print(p_path)
+            print(q_path)
+            # path = p_path + q_path.reverse()
+            pathFound = True
+            break
 
-    if (pathfound):
-        path.append(destination_point)
-        curr = dst_box
-        while (curr != src_box):
-            path.append(boxes[curr][1])
-            curr = boxes[curr][0]
-        path.append(source_point)
-        path.reverse()
+        for neighbor in mesh["adj"][p_box]:
+            p_dst = find_next_point(p_src, p_box, neighbor)
+            link_cost = euclidean(p_src, p_dst)
+            new_cost = foward_cost[p_box] + link_cost
+            if (neighbor not in foward_prev or new_cost < foward_cost[neighbor]):
+                foward_cost[neighbor] = new_cost
+                p_priority = new_cost + euclidean(p_dst, q_src)
+                heappush(p_frontier, (p_priority, (neighbor, p_dst)))
+                foward_prev[neighbor] = (p_box, p_dst)
+
+        for neighbor in mesh["adj"][q_box]:
+            q_dst = find_next_point(q_src, q_box, neighbor)
+            link_cost = euclidean(q_src, q_dst)
+            new_cost = backward_cost[q_box] + link_cost
+            if (neighbor not in backward_prev or new_cost < backward_cost[neighbor]):
+                backward_cost[neighbor] = new_cost
+                q_priority = new_cost + euclidean(q_dst, p_src)
+                heappush(q_frontier, (q_priority, (neighbor, q_dst)))
+                backward_prev[neighbor] = (q_box, q_dst)
+
+    if (pathFound):
+        print("Found Path")
 
     return path, boxes.keys()
 
 
-def isIntersecting(foward_path=[], backward_path=[]):
+def construct_path(box_point, target_box, prev_dict):
+    """
+    Constructs a path from the given box_point to the target_box using the prev_dict.
 
-    for (i, j) in zip(foward_path, backward_path.reverse()):
-        if (i != j):
-            return false
-    return true
+    Args:
+        box_point: The current box and point tuple (box, point)
+        target_box: The target box to reach
+        prev_dict: Dictionary containing the previous box and point for each box
+
+    Returns:
+        The constructed path as a list of points from box_point to target_box
+    """
+    path = []
+    while box_point[0] != target_box:
+        path.append(box_point[1])
+        print(prev_dict[box_point[0]])
+        box_point = prev_dict[box_point[0]]
+    path.append(box_point[1])
+    return path
 
 
 def find_box(p, mesh):
