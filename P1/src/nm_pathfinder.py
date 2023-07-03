@@ -21,8 +21,11 @@ def find_path(source_point, destination_point, mesh):
 
     print("EBIC COORDS", source_point, destination_point)
 
-    source_point =  (310, 337)
-    destination_point = (69, 434)
+    source_point = (44, 372)
+    destination_point = (179, 132)
+
+    # source_point =  (310, 337)
+    # destination_point = (69, 434)
     path = []
     # mapping of boxes to (backpointer to previous box), used to find the path
     boxes = {}
@@ -174,7 +177,7 @@ def find_path(source_point, destination_point, mesh):
 
         # print(check)
         # assert(check == path)
-        path = check
+        # path = check
 
 
     else:
@@ -338,7 +341,11 @@ def astar_find_path(source_point, destination_point, mesh):
             pathFound = True
             break
         p_src = detail_points[p_box]
+
+        # path.append(p_src)
+
         for neighbor in mesh["adj"][p_box]:
+            print(frontier)
             p_dst = find_next_point(p_src, p_box, neighbor)
 
             link_cost = euclidean(p_src, p_dst)
@@ -351,11 +358,6 @@ def astar_find_path(source_point, destination_point, mesh):
 
                 p_priority = new_cost + 0*euclidean(p_dst, destination_point)
                 heappush(frontier, (p_priority, neighbor))
-
-            if (a == 1):
-                print(forward_cost)
-                print(frontier)
-            a+=1
 
 
     if (pathFound):
