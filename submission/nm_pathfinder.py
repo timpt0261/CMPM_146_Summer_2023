@@ -101,7 +101,7 @@ def find_path(source_point, destination_point, mesh):
 
                 # We must handle when we arrive at the destination box
                 # This is because the cost from the entry to the goal point matters.
-                # But there is the argument
+                # But I think it may yield better results without it after testing
                 # if (neighbor != goal_box):
                 #     p_priority = new_cost + euclidean(entrypoint, curr_goal)
                 # else:
@@ -124,7 +124,7 @@ def find_path(source_point, destination_point, mesh):
                 f_path = f_path[:-1]
 
         path = f_path + b_path
-        print(b_path)
+
 
 
     else:
