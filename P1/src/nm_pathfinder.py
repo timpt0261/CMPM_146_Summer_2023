@@ -44,7 +44,7 @@ def find_path(source_point, destination_point, mesh):
 
     boxes[src_box] = True
     p_src = source_point
-    p_dst = None
+    n_entry = None
     frontier = []  # takes in a (priority, {stuff})
 
     # stuff has:
@@ -71,8 +71,10 @@ def find_path(source_point, destination_point, mesh):
 
     pathFound = False
     while (frontier):
+        s = str(frontier)
         p_priority, p_box, curr_goal = heappop(frontier)
-        boxes[p_box] = True
+
+        print("-" * 50, "\n", p_priority, p_box , "\n", s)
 
         if ((curr_goal == destination_point and p_box in backward_prev)
             or (curr_goal == source_point and p_box in forward_prev)):
@@ -112,18 +114,19 @@ def find_path(source_point, destination_point, mesh):
         p_src = points[p_box]
 
         for neighbor in mesh["adj"][p_box]:
-            p_dst = find_next_point(p_src, p_box, neighbor)
-            # print(p_dst)
+            n_entry = find_next_point(p_src, p_box, neighbor)
+            # print(n_entry)
+            boxes[neighbor] = True
 
-            link_cost = euclidean(p_src, p_dst)
+            link_cost = euclidean(p_src, n_entry)
             new_cost = cost_so_far[p_box] + link_cost
             if (neighbor not in prev or new_cost < cost_so_far[neighbor]):
 
                 cost_so_far[neighbor] = new_cost
                 prev[neighbor] = p_box
-                points[neighbor] = p_dst
+                points[neighbor] = n_entry
 
-                p_priority = new_cost + euclidean(p_dst, curr_goal)
+                p_priority = new_cost + 0*euclidean(n_entry, curr_goal)
                 heappush(frontier, (p_priority, neighbor, curr_goal))
 
 
@@ -167,17 +170,17 @@ def find_path(source_point, destination_point, mesh):
         print(source_point, destination_point)
         print(len(check), len(set(check)))
 
-        # checka, b = astar_find_path(destination_point,source_point, mesh)
+        checka, b = astar_find_path(destination_point,source_point, mesh)
 
-        # print(destination_point, source_point)
-        # print(len(checka), len(set(checka)))
+        print(destination_point, source_point)
+        print(len(checka), len(set(checka)))
 
-        # print(path_len(path), path_len(check), path_len(checka))
-        print(path_len(path), path_len(check))
+        print(path_len(path), path_len(check), path_len(checka))
+        # print(path_len(path), path_len(check))
 
         # print(check)
         # assert(check == path)
-        # path = check
+        path = check
 
 
     else:
@@ -211,7 +214,7 @@ def construct_path(last_box, target_box, prev_dict, points_dict, last_point=None
     """
     path = []
     curr_box = last_box
-
+    print(curr_box)
     # Initialize with a point first...
     if (last_point is not None):
         path.append(last_point)
@@ -219,11 +222,12 @@ def construct_path(last_box, target_box, prev_dict, points_dict, last_point=None
         if (curr_box != target_box):
             path.append(points_dict[curr_box])
             curr_box = prev_dict[curr_box]
-
+            print(curr_box)
     while curr_box != target_box:
         if (path[-1] != points_dict[curr_box]): # remove duplicates
             path.append(points_dict[curr_box])
         curr_box = prev_dict[curr_box] # (290, 625) (108, 525)
+        print(curr_box)
 
     if (len(path) > 0 and path[-1] != points_dict[target_box]):
         path.append(points_dict[target_box])
@@ -270,7 +274,7 @@ def find_next_point(n, srcbox, dstbox):
     if (srcbox[2] == dstbox[3] or srcbox[3] == dstbox[2]):
         ret_y = srcbox[2] if (srcbox[2] == dstbox[3]) else srcbox[3]
 
-        # x range (Max of the left, the min of the right)
+        # x range (Max of the left, the min of the right) # i called you on discord
         left = max(srcbox[0], dstbox[0])  # b1x1 , b2x1
         right = min(srcbox[1], dstbox[1])  # b1x2 , b2x2
         ret_x = left if (n[0] <= left) else right if (right <= n[0]) else n[0]
@@ -312,14 +316,20 @@ def astar_find_path(source_point, destination_point, mesh):
 
     boxes[src_box] = True
     p_src = source_point
-    p_dst = None
+    n_entry = None
     frontier = []  # takes in a (priority, {stuff})
 
     # stuff has:
     # current box
+    # backpointer
+    # detail point
+    # cost so far
+
+    # edge? do we actually need this?
+
     # destination type (src or dst) to distinguish forward or back
 
-    heappush(frontier, (0, p_box))
+    heappush(frontier, (0, p_box, None, source_point, 0, [p_box]))
     detail_points = {src_box : source_point}
 
     # used to track edge costs
@@ -333,35 +343,46 @@ def astar_find_path(source_point, destination_point, mesh):
     backward_prev[q_box] = None
     a = 0
     pathFound = True
+
     while (frontier):
-        p_priority, p_box = heappop(frontier)
+        s = str(frontier)
+        p_priority, p_box, backpointer, entry_point, cost_so_far, boxpath = heappop(frontier)
         boxes[p_box] = True
+        print("-" * 50, "\n", p_priority, p_box , "\n", s)
+        print("Detail:", detail_points)
+        print("Costs:", forward_cost)
+        print("Prevs:", forward_prev)
+
 
         if (p_box == dst_box):
             pathFound = True
             break
-        p_src = detail_points[p_box]
-
-        # path.append(p_src)
 
         for neighbor in mesh["adj"][p_box]:
-            print(frontier)
-            p_dst = find_next_point(p_src, p_box, neighbor)
+            n_entry = find_next_point(entry_point, p_box, neighbor)
 
-            link_cost = euclidean(p_src, p_dst)
-            new_cost = forward_cost[p_box] + link_cost
+            link_cost = euclidean(entry_point, n_entry)
+            new_cost = cost_so_far + link_cost
+
+            # if (neighbor == dst_box):
+            #     new_cost += euclidean(n_entry, destination_point)
+
             if (neighbor not in forward_prev or new_cost < forward_cost[neighbor]):
-
                 forward_cost[neighbor] = new_cost
                 forward_prev[neighbor] = p_box
-                detail_points[neighbor] = p_dst
+                detail_points[neighbor] = n_entry
 
-                p_priority = new_cost + 0*euclidean(p_dst, destination_point)
-                heappush(frontier, (p_priority, neighbor))
-
+                if (neighbor != dst_box):
+                    p_priority = new_cost + euclidean(n_entry, destination_point)
+                else:
+                    p_priority = new_cost
+                heappush(frontier, (p_priority, neighbor, p_box, n_entry, new_cost, boxpath + [neighbor]))
 
     if (pathFound):
         assert(detail_points[src_box] == source_point)
+        path = []
+        for box in boxpath:
+
         path = construct_path(p_box, src_box, forward_prev, detail_points, destination_point)
         assert(path[0] == source_point)
         assert(path[-1] == destination_point)
