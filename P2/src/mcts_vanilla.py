@@ -30,12 +30,19 @@ def ucb(node, parent_visits):
 
 
 def find_best_child(node):
-    best_ucb = 0
+    """Selects the best child node based on the UCB score.
+
+    Args:
+        node: The parent node.
+
+    Returns: The best child node.
+    """
+    best_ucb = float('-inf')
     best_child = None
 
-    for child in node.childe.node.values():
+    for child in node.child_nodes.values():
         child_ucb = ucb(child, node.visits)
-        if (child_ucb > best_ucb):
+        if child_ucb > best_ucb:
             best_ucb = child_ucb
             best_child = child
 
@@ -43,85 +50,61 @@ def find_best_child(node):
 
 
 def traverse_nodes(node, board, state, identity):
-    """ Traverses the tree until the end criterion are met.
+    """Traverses the tree until the end criterion are met.
 
     Args:
-        node:       A tree node from which the search is traversing.
-        board:      The game setup.
-        state:      The state of the game.
-        identity:   The bot's identity, either 'red' or 'blue'.
+        node: A tree node from which the search is traversing.
+        board: The game setup.
+        state: The state of the game.
+        identity: The bot's identity, either 'red' or 'blue'.
 
-    Returns:        A node from which the prev stage of the search can proceed.
-
+    Returns: A node from which the previous stage of the search can proceed.
     """
+    # Check if node is terminal or fully expanded
+    while not bool(node.untried_actions) and not bool(node.child_nodes):
+        best_child = find_best_child(node)  # Find the best child node
+        # Update the game state
+        state = board.next_state(state, best_child.parent_action)
+        node = best_child
+
     # Check if node is terminal
-    if (not bool(node.untried_actions) or not board.is_ended(state)):
+    if not bool(node.untried_actions):
         return node
 
-    # Check if node is eexpanded
-    if (not bool(node.child_nodes)):
-        return expand_leaf(node, board, state)
+    # Node is not fully expanded, so expand the leaf node
+    child_node = expand_leaf(node, board, state)
+    return child_node
 
-    # Find best child
-    best_child = find_best_child(node)
-
-    # Update the game state
-    next_move = best_child.parent_action  # next move is determined by best child
-    best_child.untried_actions.remove(next_move)  # remove move from child
-    next_state = board.next_state(state, next_move)  # update state
-
-    return traverse_nodes(best_child, board, next_state, identity)
-
-
-# def expand_node(node, board, state):
-#     # Choose a random unexplored move to expand the node
-#     unexplored_moves = get_unexplored_moves(node, board, state)
-#     move = random.choice(unexplored_moves)
-
-#     # Update the board and state based on the chosen move
-#     update_board(board, move)
-#     update_state(state, move)
-
-#     # Create a new child node with the chosen move
-#     child_node = Node(move, node)
-
-#     # Add the child node to the parent node's children list
-#     node.children.append(child_node)
-
-#     return child_node
 
 def expand_leaf(node, board, state):
-    """ Adds a new leaf to the tree by creating a new child node for the given node.
+    """Adds a new leaf to the tree by creating a new child node for the given node.
 
     Args:
-        node:   The node for which a child will be added.
-        board:  The game setup.
-        state:  The state of the game.
+        node: The node for which a child will be added.
+        board: The game setup.
+        state: The state of the game.
 
-    Returns:    The added child node.
-
+    Returns: The added child node.
     """
+    untried_actions = node.untried_actions
+    action = choice(untried_actions)  # Choose a random unexplored action
+    # Remove the chosen action from untried actions
+    untried_actions.remove(action)
 
-    # Choose a random unexplored move to expand the node
-    unexplored_moves = board.legal_actions(state)
-    move = random.choice(unexplored_moves)
+    next_state = board.next_state(state, action)  # Update the game state
 
-    # Update the board and state based on the chosen move
-    next_state = board.next_state(state, node.parent_action)
+    child_node = MCTSNode(parent=node, parent_action=action,
+                          action_list=board.legal_actions(next_state))  # Create a new child node
+    # Add the child node to the parent node
+    node.child_nodes[action] = child_node
 
-    # Creates a new child node with the chosen move
-    new_node_action_list = node.untried_actions.remove(move)
-    new_node = MCTSNode(parent=node, parent_action=move,
-                        action_list=new_node_action_list)  # create new MCTS node
-    # Add child node to the parent's dictionary
-    node.child_nodes[move] = new_node
-    return new_node
+    return child_node
 
 
 def rollout_policy(board, state):
     while not board.is_ended(state):
         legal_actions = board.legal_actions(state)
-        random_action = random.choice(legal_actions)
+        random_action = choice(legal_actions)
         state = board.next_state(state, random_action)
     return state
 
@@ -141,7 +124,7 @@ def rollout(board, state):
     previous_player = board.previous_player(rollout_state)
     current_player = board.current_player(rollout_state)
 
-    rollout_state = rollout_policy(rollout_state, board)
+    rollout_state = rollout_policy(board, rollout_state)
 
     winner_values = board.win_values(rollout_state)
 
@@ -195,11 +178,11 @@ def think(board, state):
         leaf = traverse_nodes(node, board, sampled_game,
                               identity_of_bot)  # Find Leaf Node
 
-        next_sampled_game = board.next_state(
-            sampled_game, leaf.parent_action)
+        # next_sampled_game = board.next_state(
+        #     sampled_game, leaf.parent_action)
 
-        # Simulate rest of game
-        result_of_game = rollout(board, next_sampled_game)
+        # Simulate rest of the game
+        result_of_game = rollout(board, sampled_game)
 
         backpropagate(leaf, result_of_game)  # Update wins and visits
 
