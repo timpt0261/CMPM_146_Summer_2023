@@ -30,6 +30,7 @@ inv_positions = dict(
     (v, P) for P, v in positions.items()
 )
 
+
 class Board(object):
     wins = [
         positions[(r, 0)] | positions[(r, 1)] | positions[(r, 2)]
@@ -228,9 +229,9 @@ class Board(object):
 
         # Is this particular board won already?
         finished = state[18] | state[19]
-        if finished & positions[(R,C)]:
+        if finished & positions[(R, C)]:
             return False
-        
+
         # Is our action unconstrained by the previous action?
         if state[20] is None:
             return True
@@ -299,14 +300,14 @@ class Board(object):
         ret = {}
         for y in range(3):
             for x in range(3):
-                if p1 & positions[(y,x)]:
-                    ret[(y,x)] = 1
-                elif p2 & positions[(y,x)]:
-                    ret[(y,x)] = 2
+                if p1 & positions[(y, x)]:
+                    ret[(y, x)] = 1
+                elif p2 & positions[(y, x)]:
+                    ret[(y, x)] = 2
                 else:
-                    ret[(y,x)] = 0
+                    ret[(y, x)] = 0
         return ret
-        
+
     def points_values(self, state):
         if not self.is_ended(state):
             return
