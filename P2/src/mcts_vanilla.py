@@ -61,14 +61,17 @@ def traverse_nodes(node, board, state, identity):
     Returns: A node from which the previous stage of the search can proceed.
     """
     # Check if node is terminal or fully expanded
-    while not bool(node.untried_actions) and not bool(node.child_nodes):
+    is_terminal = bool(node.untried_actions) or board.is_ended(state)
+    is_fully_expanded = bool(node.child_nodes)
+
+    while not is_terminal and not is_expanded:
         best_child = find_best_child(node)  # Find the best child node
         # Update the game state
         state = board.next_state(state, best_child.parent_action)
         node = best_child
 
     # Check if node is terminal
-    if not bool(node.untried_actions):
+    if is_terminal:
         return node
 
     # Node is not fully expanded, so expand the leaf node
