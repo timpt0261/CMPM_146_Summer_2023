@@ -6,20 +6,23 @@ num_nodes = 1000
 explore_factor = 2.0
 
 
-def ucb(node, parent_visits):
+def ucb(node, parent_visits, identity):
     if node.visits == 0 or parent_visits == 0:
         return float('inf')
-    exploitation = node.wins / node.visits
+    if identity == 'opponent':
+        exploitation = (node.visits - node.wins) / node.visits
+    else:
+        exploitation = node.wins / node.visits
     exploration = explore_factor * sqrt(log(parent_visits) / node.visits)
     return exploitation + exploration
 
 
-def find_best_child(node):
+def find_best_child(node, identity):
     best_ucb = float('-inf')
     best_child = None
 
     for child in node.child_nodes.values():
-        child_ucb = ucb(child, node.visits)
+        child_ucb = ucb(child, node.visits, identity)
         if child_ucb > best_ucb:
             best_ucb = child_ucb
             best_child = child
@@ -35,8 +38,13 @@ def traverse_nodes(node, board, state, identity):
         child_node = expand_leaf(node, board, state)
         return child_node
 
-    best_child = find_best_child(node)
+    best_child = find_best_child(node, identity)
     next_state = board.next_state(state, best_child.parent_action)
+
+    if identity == 'opponent':
+        identity = 'current_player'
+    else:
+        identity = 'opponent'
 
     return traverse_nodes(best_child, board, next_state, identity)
 
@@ -50,7 +58,8 @@ def expand_leaf(node, board, state):
     child_node = MCTSNode(parent=node, parent_action=action,
                           action_list=board.legal_actions(next_state))
     node.child_nodes[action] = child_node
-
+    print(f"Current node has {len(node.child_nodes.values())} children")
+    print("Is returing childe node")
     return child_node
 
 
@@ -63,6 +72,7 @@ def rollout_policy(board, state):
 
 
 def rollout(board, state):
+    print("In rollout state")
     rollout_state = state
 
     rollout_state = rollout_policy(board, rollout_state)
@@ -77,6 +87,7 @@ def rollout(board, state):
 
 
 def backpropagate(node, won):
+    print("Is in backpropigating")
     if node.parent is None:
         return
 
@@ -91,12 +102,20 @@ def think(board, state):
     identity_of_bot = board.current_player(state)
     root_node = MCTSNode(parent=None, parent_action=None,
                          action_list=board.legal_actions(state))
+    # initialize tree with root node
+    for action in root_node.untried_actions:
+        next_state = board.next_state(state, action)
+        child_node = MCTSNode(parent=root_node, parent_action=action,
+                              action_list=board.legal_actions(next_state))
+        root_node.child_nodes[action] = child_node
 
+    # need to initialize state with initlal root
     for step in range(num_nodes):
         sampled_game = state
         node = root_node
-
         leaf = traverse_nodes(node, board, sampled_game, identity_of_bot)
+        
+        assert (leaf in node.child_nodes.values())
         sampled_game = board.next_state(sampled_game, leaf.parent_action)
         result_of_game = rollout(board, sampled_game)
 
