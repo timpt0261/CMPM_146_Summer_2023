@@ -12,20 +12,24 @@ class MCTSNode:
 
         """
         self.parent = parent                    # Parent node to this node
-        self.parent_action = parent_action      # The move that got us to this node - "None" for the root node.
+        # The move that got us to this node - "None" for the root node.
+        self.parent_action = parent_action
 
         self.child_nodes = {}                   # Action -> MCTSNode dictionary of children
         self.untried_actions = action_list      # Yet unexplored actions
 
-        self.wins = 0                           # Total wins of all paths through this node.
-        self.visits = 0                         # Number of times this node has been visited.
+        # Total wins of all paths through this node.
+        self.wins = 0
+        # Number of times this node has been visited.
+        self.visits = 0
 
     def __repr__(self):
         """
         This method provides a string representing the node. Any time str(node) is used, this method is called.
         """
         return ' '.join(["[", str(self.parent_action),
-                         "Win rate:", "{0:.0f}%".format(100 * self.wins / self.visits),
+                         "Win rate:", "{0:.0f}%".format(
+                             100 * self.wins / self.visits),
                          "Visits:", str(self.visits),  "]"])
 
     def tree_to_string(self, horizon=1, indent=0):
@@ -43,3 +47,9 @@ class MCTSNode:
             for child in self.child_nodes.values():
                 string += child.tree_to_string(horizon - 1, indent + 1)
         return string
+
+    def is_terminal(self, board, state):
+        return not self.untried_actions and board.is_ended(state)
+
+    def is_expanded(self):
+        return bool(self.child_nodes)
