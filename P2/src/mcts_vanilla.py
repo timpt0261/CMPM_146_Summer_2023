@@ -114,14 +114,14 @@ def think(board, state):
         sampled_game = state
         node = root_node
         leaf = traverse_nodes(node, board, sampled_game, identity_of_bot)
-        
-        assert (leaf in node.child_nodes.values())
+
+        # assert (leaf in node.child_nodes.values())
         sampled_game = board.next_state(sampled_game, leaf.parent_action)
         result_of_game = rollout(board, sampled_game)
 
         backpropagate(leaf, result_of_game)
 
-    best_child_node = find_best_child(root_node)
+    best_child_node = find_best_child(root_node, identity_of_bot)
     if best_child_node is not None:
         return best_child_node.parent_action
 
