@@ -49,7 +49,7 @@ class MCTSNode:
         return string
 
     def is_terminal(self, board, state):
-        return not self.untried_actions and board.is_ended(state)
+        return board.is_ended(state)
 
     def is_expanded(self):
-        return bool(self.child_nodes)
+        return bool(self.untried_actions)
