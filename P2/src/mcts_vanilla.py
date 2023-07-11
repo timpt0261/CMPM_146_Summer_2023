@@ -17,17 +17,17 @@ def ucb(node, parent_visits, board, state, identity):
         exploitation = (1 - node.wins) / node.visits
     else:
         exploitation = node.wins / node.visits
+
     exploration = explore_factor * sqrt(log(parent_visits) / node.visits)
     return exploitation + exploration
 
 
 def find_best_child(node, board, state, identity):
-
     best_child = None
     opposing_player = board.previous_player(state)
     current_player = board.current_player(state)
 
-    if (identity == current_player):
+    if identity == current_player:
         best_ucb = float('-inf')
 
         for child in node.child_nodes.values():
@@ -38,7 +38,7 @@ def find_best_child(node, board, state, identity):
     else:
         best_ucb = float('inf')
         for child in node.child_nodes.values():
-            child_ucb = ucb(child, node.visits, identity)
+            child_ucb = ucb(child, node.visits, board, state, identity)
             if child_ucb < best_ucb:
                 best_ucb = child_ucb
                 best_child = child
@@ -112,8 +112,9 @@ def rollout(board, state, identity):
     Args:
         board:  The game setup.
         state:  The state of the game.
+        identity: The bot's identity, either 'red' or 'blue'.
 
-    returns win(+1), draw(0), or lose(-1)
+    Returns: Win (+1), draw (0), or lose (-1).
 
     """
 
@@ -127,11 +128,8 @@ def rollout(board, state, identity):
     current_player = board.current_player(rollout_state)
 
     if winner_values:
-        player_1 = winner_values.get(
-            identity if identity == current_player else opposing_player)
-        player_2 = winner_values.get(
-            identity if identity == current_player else opposing_player)
-        # print( f"Winner Values for current node is Player 1: {player_1} Player 2: {player_2}")
+        player_1 = winner_values.get(identity)
+        player_2 = winner_values.get(opposing_player)
         return 1 if player_1 > player_2 else -1 if player_1 < player_2 else 0
 
 
@@ -162,6 +160,7 @@ def think(board, state):
     for step in range(num_nodes):
         sampled_game = state
         node = root_node
+
         leaf = traverse_nodes(node, board, sampled_game, identity_of_bot)
         sampled_game = board.next_state(sampled_game, leaf.parent_action)
         result_of_game = rollout(board, sampled_game, identity_of_bot)
