@@ -1,0 +1,7 @@
+Experiment 1 analysis:
+Player 1: MCTS vanilla w/ static tree size of 100 nodes
+Player 2: MCTS vanilla w/ dynamic node tree sizes (100, 300, 500, 1000)
+
+For smaller tree sizes (1-100 nodes), player 1 won a majority of the rounds. However, as the tree size began to increase,
+player 2's win rate significantly grew. The upward trend of player 2's win rate continued until it plateaued around 500 
+nodes, with no significant change to win rate as the tree size further increased (500 -> 1000 nodes only saw an increase of 3%).
