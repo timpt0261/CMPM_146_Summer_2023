@@ -1,3 +1,4 @@
+import random
 from mcts_node import MCTSNode
 from random import choice
 from math import sqrt, log
@@ -101,80 +102,47 @@ def expand_leaf(node, board, state):
 #         state = temp_state
 
 
-def outcome(owned_boxes, game_points, current_player):
-    if game_points is not None:
-        red_score = game_points[1] * 9
-        blue_score = game_points[2] * 9
-    else:
-        red_score = len([v for v in owned_boxes.values() if v == 1])
-        blue_score = len([v for v in owned_boxes.values() if v == 2])
-
-    return red_score - blue_score if current_player == 1 else blue_score - red_score
-
-
-# def rollout_policy(board, state, current_player):
-#     moves = board.legal_actions(state)
-
-#     best_move = moves[0]
-#     best_expectation = float('-inf')
-#     best_state = state
-
-#     for move in moves:
-#         total_score = 0.0
-
-#         # Sample a set number of games where the target move is immediately applied.
-#         for r in range(10):
-#             rollout_state = board.next_state(state, move)
-
-#             # Only play to the specified depth.
-#             for i in range(5):
-#                 if board.is_ended(rollout_state):
-#                     break
-#                 rollout_move = choice(board.legal_actions(rollout_state))
-#                 rollout_state = board.next_state(rollout_state, rollout_move)
-
-#             total_score += outcome(board.owned_boxes(rollout_state),
-#                                    board.points_values(rollout_state), current_player)
-
-#         # Divide by the correct number of rollouts
-#         expectation = float(total_score) / 10
-
-#         # If the current move has a better average score, replace best_move, best_expectation, and best_state
-#         if expectation > best_expectation:
-#             best_expectation = expectation
-#             best_move = move
-#             best_state = rollout_state
-
-#     return best_state
-def rollout_policy(board, state, current_player):
+def heuristic_rollout_policy(board, state, current_player):
     moves = board.legal_actions(state)
 
-    best_expectation = float('-inf')
-    best_state = state
+    best_move = moves[0]
+    best_score = float('-inf')
 
     for move in moves:
         rollout_state = board.next_state(state, move)
 
-        if board.is_ended(rollout_state):
-            # If the rollout state is already an end state, no need to perform a rollout
-            total_score = outcome(board.owned_boxes(
-                rollout_state), board.points_values(rollout_state), current_player)
-        else:
-            total_score = 0.0
+        # Evaluate the score based on the current state and the heuristic
+        score = evaluate_state(board, rollout_state, current_player)
 
-            # Perform a single rollout from the current move
-            rollout_move = choice(board.legal_actions(rollout_state))
-            rollout_state = board.next_state(rollout_state, rollout_move)
+        # If the current move has a higher score, update the best move and score
+        if score > best_score:
+            best_score = score
+            best_move = move
 
-            total_score += outcome(board.owned_boxes(rollout_state),
-                                   board.points_values(rollout_state), current_player)
+    return best_move
 
-        # If the current move has a better score, replace best_move, best_expectation, and best_state
-        if total_score > best_expectation:
-            best_expectation = total_score
-            best_state = rollout_state
 
-    return best_state
+def evaluate_state(board, state, current_player):
+    # Implement your heuristic evaluation function here
+    # This function should assign a score to the given state based on its desirability for the current player
+    # Higher scores indicate more desirable states
+
+    # Example heuristic: Count the number of favorable positions for the current player
+    favorable_positions = count_favorable_positions(state, current_player)
+
+    # Return the score as a result of the heuristic evaluation
+    return favorable_positions
+
+
+def count_favorable_positions(state, current_player):
+    # Count the number of favorable positions for the current player
+    # You can define your own criteria for what constitutes a favorable position
+
+    favorable_positions = 0
+
+    # Implement your logic to count favorable positions here
+
+    return favorable_positions
 
 
 def rollout(board, state, identity):
@@ -188,13 +156,17 @@ def rollout(board, state, identity):
     Returns: Win (+1), draw (0), or lose (-1).
     """
     rollout_state = state
+    current_player = board.current_player(rollout_state)
 
-    rollout_state = rollout_policy(board, rollout_state, identity)
-    results = outcome(board.owned_boxes(rollout_state),
-                      board.points_values(rollout_state), identity)
-    # print(f"results: {results}")
+    while not board.is_ended(rollout_state):
+        best_action = heuristic_rollout_policy(
+            board, rollout_state, current_player)
+        rollout_state = board.next_state(rollout_state, best_action)
+        current_player = board.current_player(rollout_state)
 
-    return results
+    # Evaluate the final state using the heuristic
+    result = evaluate_state(rollout_state, identity)
+    return result
 
 
 def backpropagate(node, won):
