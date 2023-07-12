@@ -14,7 +14,7 @@ def ucb(node, parent_visits, board, state, identity):
         return float('inf') if identity == current_player else float('-inf')
 
     if identity == opposing_player:
-        exploitation = (1 - node.wins) / node.visits
+        exploitation = (1 - node.wins / node.visits)
     else:
         exploitation = node.wins / node.visits
 
@@ -26,7 +26,7 @@ def find_best_child(node, board, state, identity):
     best_child = None
     opposing_player = board.previous_player(state)
     current_player = board.current_player(state)
-
+    # find max always
     if identity == current_player:
         best_ucb = float('-inf')
 
@@ -57,6 +57,7 @@ def traverse_nodes(node, board, state, identity):
 
     Returns: A node from which the previous stage of the search can proceed.
     """
+    # remove recursion
 
     if node.is_terminal(board, state):
         # print("Is terminal ")
@@ -126,7 +127,7 @@ def rollout(board, state, identity):
 
     opposing_player = board.previous_player(rollout_state)
     current_player = board.current_player(rollout_state)
-
+    # use points instead
     if winner_values:
         player_1 = winner_values.get(identity)
         player_2 = winner_values.get(opposing_player)
@@ -168,9 +169,22 @@ def think(board, state):
         backpropagate(leaf, result_of_game)
         # print(f"Root node has {node.wins} win")
 
-    best_child_node = find_best_child(root_node, board, state, identity_of_bot)
+    best_child_node = find_best_win_rate(root_node)
     if best_child_node is not None:
         print(root_node.tree_to_string())
         return best_child_node.parent_action
 
     return None
+
+def find_best_win_rate(node):
+    
+    best_child = None
+    best_win_rate = float('-inf')
+    
+    for child in node.child_nodes.values():
+        win_rate = child.wins/ child.visits:
+        if(win_rate > best_win_rate):
+            best_win_rate = win_rate
+            best_child = child
+    return best_child
+        
