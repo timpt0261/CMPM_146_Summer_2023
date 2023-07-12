@@ -101,11 +101,9 @@ def expand_leaf(node, board, state):
 #         state = temp_state
 
 
-def outcome(board, state, owned_boxes, current_player):
+def outcome(owned_boxes, current_player):
     red_score = len([v for v in owned_boxes.values() if v == 1])
     blue_score = len([v for v in owned_boxes.values() if v == 2])
-
-    current_player = board.current_player(state)
 
     if current_player == 1:
         return red_score - blue_score
