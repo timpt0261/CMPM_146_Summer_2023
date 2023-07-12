@@ -88,24 +88,6 @@ def expand_leaf(node, board, state):
     # print(f"Current node has {len(node.child_nodes.values())}")
     return child_node
 
-# def heuristic(board, state, node, action):
-#     #if applying an action leads to a win, prioritize that action
-
-#     #get current num of wins
-#     wins = board.win_values[1](state)
-
-#     #copy the current state into temp state
-#     temp_state = state
-
-#     #apply a random action to the temp state and get # of wins
-#     temp_action = choice(board.legal_actions(temp_state)) #select a random legal action
-#     temp_state = board.next_state(temp_state, temp_action) #apply it to the temp state
-#     temp_boxes = board.owned_boxes(temp_state) #get number of boxes
-
-#     if(temp_boxes > boxes):
-#         state = temp_state
-
-
 def outcome(owned_boxes, game_points, current_player):
     if game_points is not None:
         # Try to normalize it up?  Not so sure about this code anyhow.

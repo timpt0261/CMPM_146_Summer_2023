@@ -1,3 +1,11 @@
 Reuben Chavez and Jordan Reavis
 
-For our modifed we improved the rollout function to use the heustic to be base on the number of boxes owned or based on the poin total if th
+For our modifed we improved the rollout function to perform rollouts and evaluate game states using a heuristic approach.
+
+The outcome function calculates the score difference between the red and blue players based on the owned boxes and game points. If available, game points are normalized by multiplying them by 9.
+
+The heuristic_rollout_policy function implements a rollout policy using a heuristic. It considers available moves and selects the best move based on a combination of scores and heuristics. If the rollout state is already an end state, the outcome evaluation is directly used. Otherwise, a single rollout is performed by selecting a random action and evaluating the resulting state using the outcome function. The move score is determined by considering the expectation from the outcome, the number of opponent moves, and the number of owned boxes by the current player.
+
+The rollout function executes the rollout process by repeatedly selecting the best action based on the heuristic rollout policy until the game ends. It then evaluates the final state using the outcome function and returns the normalized result.
+
+Overall, this code provides me with a framework to conduct rollouts and make informed decisions in board games using a heuristic evaluation strategy.

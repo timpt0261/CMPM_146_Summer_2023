@@ -1,0 +1,9 @@
+Experiment 2 analysis:
+Player 1: MCTS vanilla
+Player 2: MCTS modified 
+
+100 nodes: With 100 nodes it took around ~35 mintutes,  where it seem to that around one/thirds ended in draws, two/thirds ended in with the vanilla mctc winning and the modified losing 
+
+500 nodes: With 500 nodes it took around 5 times longer ut the results were similiar 
+
+1000 nodes: With 100 nodes it took the longest, but there's seem to be more draws than rounds one for eithier bot
