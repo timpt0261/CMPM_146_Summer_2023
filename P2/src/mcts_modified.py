@@ -101,40 +101,51 @@ def expand_leaf(node, board, state):
 #         state = temp_state
 
 
-def outcome(owned_boxes, current_player):
-    red_score = len([v for v in owned_boxes.values() if v == 1])
-    blue_score = len([v for v in owned_boxes.values() if v == 2])
-
-    if current_player == 1:
-        return red_score - blue_score
+def outcome(owned_boxes, game_points, current_player):
+    if game_points is not None:
+        red_score = game_points[1] * 9
+        blue_score = game_points[2] * 9
     else:
-        return blue_score - red_score
+        red_score = len([v for v in owned_boxes.values() if v == 1])
+        blue_score = len([v for v in owned_boxes.values() if v == 2])
 
-
-def look_for_best_move(board, state, current_player):  # New heuristic function
-    curr_state = state
-    actions = board.legal_actions(curr_state)
-
-    current_point = 0
-    best_action = actions[0]
-
-    for action in actions:
-        next_state = board.next_state(curr_state, action)
-        owned_boxes = board.owned_boxes(next_state)
-        score = outcome(owned_boxes, current_player)
-        if score > current_point:
-            current_point = score
-            best_action = action
-
-    return best_action
+    return red_score - blue_score if current_player == 1 else blue_score - red_score
 
 
 def rollout_policy(board, state, current_player):
-    while not board.is_ended(state):
-        best_action = look_for_best_move(board, state, current_player)
-        state = board.next_state(state, best_action)
-        current_player = board.current_player(state)
-    return state
+    moves = board.legal_actions(state)
+
+    best_move = moves[0]
+    best_expectation = float('-inf')
+    best_state = state
+
+    for move in moves:
+        total_score = 0.0
+
+        # Sample a set number of games where the target move is immediately applied.
+        for r in range(10):
+            rollout_state = board.next_state(state, move)
+
+            # Only play to the specified depth.
+            for i in range(5):
+                if board.is_ended(rollout_state):
+                    break
+                rollout_move = choice(board.legal_actions(rollout_state))
+                rollout_state = board.next_state(rollout_state, rollout_move)
+
+            total_score += outcome(board.owned_boxes(rollout_state),
+                                   board.points_values(rollout_state), current_player)
+
+        # Divide by the correct number of rollouts
+        expectation = float(total_score) / 10
+
+        # If the current move has a better average score, replace best_move, best_expectation, and best_state
+        if expectation > best_expectation:
+            best_expectation = expectation
+            best_move = move
+            best_state = rollout_state
+
+    return best_state
 
 
 def rollout(board, state, identity):
@@ -146,15 +157,14 @@ def rollout(board, state, identity):
         identity: The bot's identity, either 'red' or 'blue'.
 
     Returns: Win (+1), draw (0), or lose (-1).
-
     """
     rollout_state = state
-    current_player = board.current_player(rollout_state)
 
-    rollout_state = rollout_policy(board, rollout_state, current_player)
+    rollout_state = rollout_policy(board, rollout_state, identity)
+    results = outcome(board.owned_boxes(rollout_state),
+                      board.points_values(rollout_state), identity)
 
-    owned_boxes = board.owned_boxes(rollout_state)
-    return outcome(owned_boxes, identity)
+    return results
 
 
 def backpropagate(node, won):
