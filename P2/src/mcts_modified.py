@@ -2,7 +2,7 @@ from mcts_node import MCTSNode
 from random import choice
 from math import sqrt, log
 
-num_nodes = 100
+num_nodes = 1000
 explore_factor = 2.0
 
 
@@ -112,37 +112,66 @@ def outcome(owned_boxes, game_points, current_player):
     return red_score - blue_score if current_player == 1 else blue_score - red_score
 
 
+# def rollout_policy(board, state, current_player):
+#     moves = board.legal_actions(state)
+
+#     best_move = moves[0]
+#     best_expectation = float('-inf')
+#     best_state = state
+
+#     for move in moves:
+#         total_score = 0.0
+
+#         # Sample a set number of games where the target move is immediately applied.
+#         for r in range(10):
+#             rollout_state = board.next_state(state, move)
+
+#             # Only play to the specified depth.
+#             for i in range(5):
+#                 if board.is_ended(rollout_state):
+#                     break
+#                 rollout_move = choice(board.legal_actions(rollout_state))
+#                 rollout_state = board.next_state(rollout_state, rollout_move)
+
+#             total_score += outcome(board.owned_boxes(rollout_state),
+#                                    board.points_values(rollout_state), current_player)
+
+#         # Divide by the correct number of rollouts
+#         expectation = float(total_score) / 10
+
+#         # If the current move has a better average score, replace best_move, best_expectation, and best_state
+#         if expectation > best_expectation:
+#             best_expectation = expectation
+#             best_move = move
+#             best_state = rollout_state
+
+#     return best_state
 def rollout_policy(board, state, current_player):
     moves = board.legal_actions(state)
 
-    best_move = moves[0]
     best_expectation = float('-inf')
     best_state = state
 
     for move in moves:
-        total_score = 0.0
+        rollout_state = board.next_state(state, move)
 
-        # Sample a set number of games where the target move is immediately applied.
-        for r in range(10):
-            rollout_state = board.next_state(state, move)
+        if board.is_ended(rollout_state):
+            # If the rollout state is already an end state, no need to perform a rollout
+            total_score = outcome(board.owned_boxes(
+                rollout_state), board.points_values(rollout_state), current_player)
+        else:
+            total_score = 0.0
 
-            # Only play to the specified depth.
-            for i in range(5):
-                if board.is_ended(rollout_state):
-                    break
-                rollout_move = choice(board.legal_actions(rollout_state))
-                rollout_state = board.next_state(rollout_state, rollout_move)
+            # Perform a single rollout from the current move
+            rollout_move = choice(board.legal_actions(rollout_state))
+            rollout_state = board.next_state(rollout_state, rollout_move)
 
             total_score += outcome(board.owned_boxes(rollout_state),
                                    board.points_values(rollout_state), current_player)
 
-        # Divide by the correct number of rollouts
-        expectation = float(total_score) / 10
-
-        # If the current move has a better average score, replace best_move, best_expectation, and best_state
-        if expectation > best_expectation:
-            best_expectation = expectation
-            best_move = move
+        # If the current move has a better score, replace best_move, best_expectation, and best_state
+        if total_score > best_expectation:
+            best_expectation = total_score
             best_state = rollout_state
 
     return best_state
@@ -163,6 +192,7 @@ def rollout(board, state, identity):
     rollout_state = rollout_policy(board, rollout_state, identity)
     results = outcome(board.owned_boxes(rollout_state),
                       board.points_values(rollout_state), identity)
+    # print(f"results: {results}")
 
     return results
 
