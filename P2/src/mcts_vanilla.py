@@ -2,7 +2,7 @@ from mcts_node import MCTSNode
 from random import choice
 from math import sqrt, log
 
-num_nodes = 1000
+num_nodes = 100
 explore_factor = 2.0
 
 
@@ -24,24 +24,16 @@ def ucb(node, parent_visits, board, state, identity):
 
 def find_best_child(node, board, state, identity):
     best_child = None
+    best_ucb = float('-inf')
+
     opposing_player = board.previous_player(state)
     current_player = board.current_player(state)
-    # find max always
-    if identity == current_player:
-        best_ucb = float('-inf')
 
-        for child in node.child_nodes.values():
-            child_ucb = ucb(child, node.visits, board, state, identity)
-            if child_ucb > best_ucb:
-                best_ucb = child_ucb
-                best_child = child
-    else:
-        best_ucb = float('inf')
-        for child in node.child_nodes.values():
-            child_ucb = ucb(child, node.visits, board, state, identity)
-            if child_ucb < best_ucb:
-                best_ucb = child_ucb
-                best_child = child
+    for child in node.child_nodes.values():
+        child_ucb = ucb(child, node.visits, board, state, identity)
+        if child_ucb > best_ucb:
+            best_ucb = child_ucb
+            best_child = child
 
     return best_child
 
@@ -71,7 +63,6 @@ def traverse_nodes(node, board, state, identity):
 
     best_child = find_best_child(node, board, state, identity)
     next_state = board.next_state(state, best_child.parent_action)
-    identity = board.current_player(next_state)
 
     return traverse_nodes(best_child, board, next_state, identity)
 
@@ -123,15 +114,9 @@ def rollout(board, state, identity):
 
     rollout_state = rollout_policy(board, rollout_state)
 
-    winner_values = board.win_values(rollout_state)
+    point_values = board.points_values(rollout_state)
 
-    opposing_player = board.previous_player(rollout_state)
-    current_player = board.current_player(rollout_state)
-    # use points instead
-    if winner_values:
-        player_1 = winner_values.get(identity)
-        player_2 = winner_values.get(opposing_player)
-        return 1 if player_1 > player_2 else -1 if player_1 < player_2 else 0
+    return point_values.get(identity)
 
 
 def backpropagate(node, won):
@@ -171,20 +156,20 @@ def think(board, state):
 
     best_child_node = find_best_win_rate(root_node)
     if best_child_node is not None:
-        print(root_node.tree_to_string())
+       # print(root_node.tree_to_string())
         return best_child_node.parent_action
 
     return None
 
+
 def find_best_win_rate(node):
-    
+
     best_child = None
     best_win_rate = float('-inf')
-    
+
     for child in node.child_nodes.values():
-        win_rate = child.wins/ child.visits:
-        if(win_rate > best_win_rate):
+        win_rate = child.wins / child.visits
+        if (win_rate > best_win_rate):
             best_win_rate = win_rate
             best_child = child
     return best_child
-        
