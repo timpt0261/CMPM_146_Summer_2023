@@ -7,9 +7,9 @@ explore_factor = 2.0
 
 
 def ucb(node, parent_visits, player, identity):
-   
+
     # print(f"Node wins: {node.wins} Node visits: {node.visits}")
-    
+
     if identity == player:
         exploitation = node.wins / node.visits
     else:
@@ -150,7 +150,7 @@ def think(board, state):
 
     best_child_node = find_best_win_rate(root_node)
     if best_child_node is not None:
-        print(root_node.tree_to_string())
+        # print(root_node.tree_to_string())
         return best_child_node.parent_action
 
     return None
