@@ -6,17 +6,14 @@ num_nodes = 100
 explore_factor = 2.0
 
 
-def ucb(node, parent_visits, board, state, identity):
-    opposing_player = board.previous_player(state)
-    current_player = board.current_player(state)
-
-    if node.visits == 0:
-        return float('inf') if identity == current_player else float('-inf')
-
-    if identity == opposing_player:
-        exploitation = (1 - node.wins / node.visits)
-    else:
+def ucb(node, parent_visits, player, identity):
+   
+    # print(f"Node wins: {node.wins} Node visits: {node.visits}")
+    
+    if identity == player:
         exploitation = node.wins / node.visits
+    else:
+        exploitation = (1 - node.wins / node.visits)
 
     exploration = explore_factor * sqrt(log(parent_visits) / node.visits)
     return exploitation + exploration
@@ -25,12 +22,10 @@ def ucb(node, parent_visits, board, state, identity):
 def find_best_child(node, board, state, identity):
     best_child = None
     best_ucb = float('-inf')
-
-    opposing_player = board.previous_player(state)
     current_player = board.current_player(state)
 
     for child in node.child_nodes.values():
-        child_ucb = ucb(child, node.visits, board, state, identity)
+        child_ucb = ucb(child, node.visits, current_player, identity)
         if child_ucb > best_ucb:
             best_ucb = child_ucb
             best_child = child
@@ -62,9 +57,8 @@ def traverse_nodes(node, board, state, identity):
     # print("looking for best child")
 
     best_child = find_best_child(node, board, state, identity)
-    next_state = board.next_state(state, best_child.parent_action)
 
-    return traverse_nodes(best_child, board, next_state, identity)
+    return best_child
 
 
 def expand_leaf(node, board, state):
@@ -156,7 +150,7 @@ def think(board, state):
 
     best_child_node = find_best_win_rate(root_node)
     if best_child_node is not None:
-       # print(root_node.tree_to_string())
+        print(root_node.tree_to_string())
         return best_child_node.parent_action
 
     return None
