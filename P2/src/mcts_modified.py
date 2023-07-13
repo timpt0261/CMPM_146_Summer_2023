@@ -3,6 +3,8 @@ from mcts_node import MCTSNode
 from random import choice
 from math import sqrt, log
 
+from rollout_bot import think
+
 num_nodes = 1000
 explore_factor = 2.0
 
@@ -88,6 +90,7 @@ def expand_leaf(node, board, state):
     # print(f"Current node has {len(node.child_nodes.values())}")
     return child_node
 
+
 def outcome(owned_boxes, game_points, current_player):
     if game_points is not None:
         # Try to normalize it up?  Not so sure about this code anyhow.
@@ -129,7 +132,8 @@ def heuristic_rollout_policy(board, state, current_player):
         move_score += len(opponent_moves) * HEURISTIC_WEIGHT
 
         owned_boxes = board.owned_boxes(rollout_state)
-        bot_box_count = len([v for v in owned_boxes.values() if v == current_player])
+        bot_box_count = len(
+            [v for v in owned_boxes.values() if v == current_player])
         move_score += bot_box_count * HEURISTIC_WEIGHT
 
         if move_score > best_score:
@@ -137,7 +141,6 @@ def heuristic_rollout_policy(board, state, current_player):
             best_move = move
 
     return best_move
-
 
 
 def rollout(board, state, identity):
