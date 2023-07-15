@@ -35,4 +35,9 @@ def is_opponent_attacking(state):
 
 def is_opponent_defending(state):
     # Check if oponet is sending fleets to it's weakest planets
+
+    enemy_planets = [[planet for planet in state.enemy_planets()
+                      if any(fleet.destination_planet == planet.ID for fleet in state.enemy_fleets())]]
+    
+    enemy_planets
     return True
