@@ -11,33 +11,47 @@ def have_largest_fleet(state):
         + sum(fleet.num_ships for fleet in state.enemy_fleets())
 
 
-def is_opponenent_spreading(state):
-    # To check if the  opposing bot is using the spread tatic
-    neutral_planets = [planet for planet in state.neutral_planets()
-                       if any(fleet.destination_planet == planet.ID for fleet in state.enemy_fleets())]
-    neutral_planets.sort(key=lambda p: p.num_ships)
+def is_opponent_spreading(state):
+    # To check if the opposing bot is using the spread tactic
 
-    enenmy_planets = [planet for planet in state.enemy_planets()
-                      if not any(fleet.destination_planet == planet.ID for fleet in state.my_fleets())]
+    # 1) Find if more small neutral planets have enemy fleets on their way
+    neutral_planets = sorted(state.neutral_planets(), key=lambda p: p.num_ships)
+    weak_neutral_planets = [planet for planet in neutral_planets if any(fleet.destination_planet == planet.ID for fleet in state.enemy_fleets())]
 
-    enemy_planets.sort(key=lambda p: p.num_ships)
+    # 2) Calculate the number of fleets heading towards weak neutral planets
+    fleets_heading_weak_neutral = sum(fleet.num_ships for fleet in state.enemy_fleets() if fleet.destination_planet in [planet.ID for planet in weak_neutral_planets])
 
-    return len(neutral_planets) > 1
+    # 3) Check if the majority of enemy fleets are heading towards weak neutral planets
+    majority_threshold = 0.5
+    return fleets_heading_weak_neutral > (len(state.enemy_fleets()) * majority_threshold)
+
 
 
 def is_opponent_attacking(state):
-    # Check is opponet is sending fleet to waekest opposing planets
-    my_planets = [planet for planet in state.my_planets()
-                  if any(fleet.destination_planet == planet.ID for fleet in state.enemy_fleets())]
+    # To check is opponet is sending fleet to waekest opposing planets
 
-    return True
+    # 1) Find Weakest planets 
+    my_planets = sorted(state.my_planets(), key=lambda p: p.num_ships)
+    weakest_owned_planets = [planet for planet in my_planets if any(fleet.destination == planet.ID for fleet in state.enemy_fleets())]
+
+    # 2) Calculate the number of fleets heading to weak owned planets 
+    fleets_heading_weak_owned = sum(fleet.num_ships for fleet in state.enemy_fleets() if fleet.destination_planet in [planet.ID for planet in weak_owned_planets])
+    
+    # 3) Check if the majority of fleets are heading toward weak owned planets
+    majority_threshold = 0.5
+    return fleets_heading_weak_owned > (len(state.enemy_fleets()) * majority_threshold)
 
 
 def is_opponent_defending(state):
-    # Check if oponet is sending fleets to it's weakest planets
+    # To check is opponet is sending fleet to weakest owned planets
 
-    enemy_planets = [[planet for planet in state.enemy_planets()
-                      if any(fleet.destination_planet == planet.ID for fleet in state.enemy_fleets())]]
+    # 1) Find Weakest planets 
+    enemy_planets = sorted(state.enemy_planets(), key=lambda p: p.num_ships)
+    weakest_owned_planets = [planet for planet in enemy_planets if any(fleet.destination == planet.ID for fleet in state.enemy_fleets())]
+
+    # 2) Calculate the number of fleets heading to weak owned planets 
+    fleets_heading_weak_owned = sum(fleet.num_ships for fleet in state.enemy_fleets() if fleet.destination_planet in [planet.ID for planet in weak_owned_planets])
     
-    enemy_planets
-    return True
+    # 3) Check if the majority of fleets are heading toward weak owned planets
+    majority_threshold = 0.5
+    return fleets_heading_weak_owned > (len(state.enemy_fleets()) * majority_threshold)

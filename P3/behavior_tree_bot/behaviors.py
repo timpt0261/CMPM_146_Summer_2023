@@ -59,3 +59,10 @@ def counter_attack(state):
 
 def priortize(state):
     return 
+
+def defend(state):
+    
+    # 1) Find weakeest owned planets that are being targeted
+    
+    # 2) 
+    return
