@@ -27,7 +27,7 @@ def is_opponent_spreading(state):
 
 
 
-def is_opponent_attacking(state):
+def is_opponent_attacking_weakest(state):
     # To check is opponet is sending fleet to waekest opposing planets
 
     # 1) Find Weakest planets 
@@ -41,8 +41,23 @@ def is_opponent_attacking(state):
     majority_threshold = 0.5
     return fleets_heading_weak_owned > (len(state.enemy_fleets()) * majority_threshold)
 
+def is_opponent_attacking_strongest(state):
+    # To check is opponet is sending fleet to waekest opposing planets
 
-def is_opponent_defending(state):
+    # 1) Find strongest planets 
+    my_planets = sorted(state.my_planets(), key=lambda p: p.num_ships,reverse=True)
+    strongest_owned_planets = [planet for planet in my_planets if any(fleet.destination == planet.ID for fleet in state.enemy_fleets())]
+
+    # 2) Calculate the number of fleets heading to strong owned planets 
+    fleets_heading_strong_owned = sum(fleet.num_ships for fleet in state.enemy_fleets() if fleet.destination_planet in [planet.ID for planet in strong_owned_planets])
+    
+    # 3) Check if the majority of fleets are heading toward strong owned planets
+    majority_threshold = 0.5
+    return fleets_heading_strong_owned > (len(state.enemy_fleets()) * majority_threshold)
+
+
+
+def is_opponent_defending_weakest(state):
     # To check is opponet is sending fleet to weakest owned planets
 
     # 1) Find Weakest planets 
@@ -55,3 +70,18 @@ def is_opponent_defending(state):
     # 3) Check if the majority of fleets are heading toward weak owned planets
     majority_threshold = 0.5
     return fleets_heading_weak_owned > (len(state.enemy_fleets()) * majority_threshold)
+
+
+def is_opponent_defending_strongest(state):
+    # To check is opponet is sending fleet to strongest owned planets
+
+    # 1) Find strongest planets 
+    enemy_planets = sorted(state.enemy_planets(), key=lambda p: p.num_ships, reverse=True)
+    strongest_owned_planets = [planet for planet in enemy_planets if any(fleet.destination == planet.ID for fleet in state.enemy_fleets())]
+
+    # 2) Calculate the number of fleets heading to strong owned planets 
+    fleets_heading_strong_owned = sum(fleet.num_ships for fleet in state.enemy_fleets() if fleet.destination_planet in [planet.ID for planet in strong_owned_planets])
+    
+    # 3) Check if the majority of fleets are heading toward strong owned planets
+    majority_threshold = 0.5
+    return fleets_heading_strong_owned > (len(state.enemy_fleets()) * majority_threshold)
