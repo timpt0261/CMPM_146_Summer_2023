@@ -1,0 +1,67 @@
+Writeup Guidelines:
+
+– What you changed from the template and why, especially related to your selection strategies,
+fitness functions, crossover and mutation operators, etc.
+– Something about each of your two favorite levels: Why do you like them? How many generations
+did it take and how many seconds to generate these levels?
+
+1. 
+Selection Strategy:
+Eletist selection - Pick random number of maps from 1% to 25% of the original population, choose the ones with the best fitness to 
+become the parents for the next generation.
+
+Roulette selection - Sums up the fitness of the population then creates an array of all the probalbites of the population, then selects random level based
+on the array of probalbites
+
+Both appedn thier best fit to the results and then using every cobination of the best parents it crteates the children
+
+
+Uniform crossover - Takes two parents, makes two copies of them. We have a new map P filled with random numbers from 0-1. So if the number is less than .5 
+we swap with one parent and if its above .5 we swap with the other. 
+
+Mutation - Randomly pick if its gonna mutate a random set of columns, rows, or positions. After it picks, its gonna iterate through it
+and if its an block or an empty space it has less than 25% to be replaced with a diffrent block, a less than 50% chance to be shifted 
+Chance that it won't mutate: 10% (aka if a random number from 0-1 is less than 0.1)
+
+2.
+
+
+Writeup Part 2
+Upon switching it to the Individual_DE I notice that the levle tend to have way more open space as well that it tend to take a slower time to get to 
+future generations when modifythin the generate successors to include both a selectors
+
+Mutate Function: 
+
+The `mutate` function in the `Individual_DE` class performs mutation on an individual's genome, introducing slight changes to its design elements (DEs). 
+It begins by randomly selecting a design element from the genome with a probability of 10%. Once a DE is chosen, it randomly selects an aspect of the DE 
+(e.g., x-coordinate, y-coordinate, type, etc.) to modify. The specific modifications depend on the type of DE. For example, if the DE is a 4-block, it can 
+change the x-coordinate, y-coordinate, or breakability property. The modifications are done using random offsets within specified ranges to ensure the new DEs
+remain within valid bounds. After the mutation, the modified genome is returned.
+
+Generate Children Function:
+
+The `generate_children` function in the `Individual_DE` class implements the Differential Evolution (DE) crossover strategy. It takes two parents, self and other, 
+and randomly selects two crossover points (pa and pb) to perform the crossover. It splits the genomes of self and other at these crossover points, creating two parts 
+(a_part and b_part) from each parent. It then combines the a_part from self and b_part from other to create a new genome ga. Similarly, it combines the a_part from other 
+and b_part from self to create a new genome gb. These two new genomes are the children generated from the crossover. The function also involves a mutation step by calling the `mutate` 
+function on both children to introduce further variability. The function returns two new individuals representing the children.
+
+<<<<<<< HEAD
+However I have modified it to use Uniform Crossover instead where it will iterate through both 
+
+3. The random_individual has bben modified to do the following where the generated level is initialized with a floor and walls. 
+=======
+3. The random_individual has been modified to do the following where the generated level is initialized with a floor and walls. 
+>>>>>>> 2befd62a7ed7b220df50c517356e5bcf180b489c
+The function then randomly adds holes, pipes, stairs, platforms, enemies, and coins to the level, respecting certain constraints. 
+The number of each element (holes, pipes, stairs, platforms, enemies, and coins) is determined randomly 
+within predefined ranges. The function ensures that pipes are not created in the air, and it also considers weighting different tile types for variability. 
+
+<<<<<<< HEAD
+3.
+Our two favorite levels are labled below, the first oe created with Individual_Grid and the Second With Individual_DE. With the first level I found it quite intresting as
+I had to manuver around obstavels in order to get to the flag pole while not facaing as may enemies as I thought Itook around 100 generatio to create but also my first 
+level without to many severe mutations. The second level was creted with Individual_DE the main reason I liked playing was becasue I it was a more consistent to a Mario level
+it took around 66 genertion to get it a lot more so since I Was still experiment with generate_successors at the time. 
+=======
+>>>>>>> 2befd62a7ed7b220df50c517356e5bcf180b489c
